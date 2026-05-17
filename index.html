@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolatrice Evo</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+}
+
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+
+body{
+  background:linear-gradient(135deg,#020617,#111827,#1e1b4b);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:6px;
+}
+
+.app{
+  width:100%;
+  max-width:430px;
+  height:calc(100vh - 12px);
+  background:#020617;
+  border-radius:24px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  box-shadow:0 25px 80px rgba(0,0,0,.65);
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px;
+  flex-shrink:0;
+}
+
+.title{
+  font-size:20px;
+  font-weight:900;
+}
+
+.top-buttons{
+  display:flex;
+  gap:7px;
+}
+
+.small-btn{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  background:#111827;
+  border:1px solid #334155;
+  color:white;
+  font-size:21px;
+}
+
+.display{
+  background:#0f172a;
+  border-radius:22px;
+  min-height:90px;
+  max-height:90px;
+  padding:12px;
+  margin-bottom:8px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  border:1px solid rgba(255,255,255,.08);
+  flex-shrink:0;
+}
+
+.operation{
+  color:#94a3b8;
+  font-size:18px;
+  text-align:right;
+  word-break:break-all;
+  min-height:24px;
+}
+
+.result{
+  color:white;
+  font-size:38px;
+  font-weight:900;
+  text-align:right;
+  word-break:break-all;
+}
+
+.buttons{
+  flex:1;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-auto-rows:1fr;
+  gap:6px;
+  min-height:0;
+}
+
+button{
+  border:none;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  user-select:none;
+}
+
+.calc-btn{
+  width:100%;
+  height:100%;
+  border-radius:14px;
+  background:#1e293b;
+  font-size:20px;
+  box-shadow:0 4px 0 rgba(0,0,0,.25);
+}
+
+.calc-btn:active{
+  transform:translateY(2px);
+  box-shadow:0 2px 0 rgba(0,0,0,.25);
+  filter:brightness(1.2);
+}
+
+.operator{background:#2563eb}
+.special{background:#475569}
+.danger{background:#dc2626}
+.equal{background:#16a34a}
+
+.history{
+  margin-top:8px;
+  background:#0f172a;
+  border-radius:16px;
+  padding:8px;
+  max-height:65px;
+  min-height:65px;
+  overflow-y:auto;
+  color:#cbd5e1;
+  font-size:12px;
+  flex-shrink:0;
+}
+
+.history h3{
+  color:#93c5fd;
+  margin-bottom:4px;
+  font-size:12px;
+}
+
+.history-item{
+  border-bottom:1px solid #1e293b;
+  padding-bottom:3px;
+  margin-bottom:3px;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.78);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  padding:18px;
+  z-index:99;
+}
+
+.modal-content{
+  width:100%;
+  max-width:430px;
+  background:#020617;
+  border-radius:24px;
+  padding:20px;
+  border:1px solid rgba(255,255,255,.12);
+  max-height:90vh;
+  overflow-y:auto;
+}
+
+.modal h2{
+  margin-bottom:14px;
+}
+
+input,textarea{
+  width:100%;
+  background:#0f172a;
+  color:white;
+  border:1px solid #334155;
+  border-radius:14px;
+  padding:12px;
+  margin:8px 0;
+  font-size:16px;
+}
+
+textarea{
+  min-height:120px;
+}
+
+.modal-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.modal-actions button{
+  flex:1;
+  padding:13px;
+  border-radius:14px;
+  font-size:15px;
+}
+
+.save{background:#16a34a}
+.close{background:#475569}
+.delete{background:#dc2626}
+.google{background:#2563eb}
+
+.user-status{
+  background:#0f172a;
+  color:#cbd5e1;
+  border-radius:14px;
+  padding:10px;
+  margin-bottom:10px;
+  font-size:14px;
+}
+
+.gallery{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.media-card{
+  background:#0f172a;
+  padding:8px;
+  border-radius:14px;
+}
+
+.media-card img,
+.media-card video{
+  width:100%;
+  height:130px;
+  object-fit:cover;
+  border-radius:12px;
+}
+
+.media-card button{
+  width:100%;
+  margin-top:6px;
+  padding:8px;
+  border-radius:10px;
+  background:#dc2626;
+}
+
+.light{
+  background:#e5e7eb;
+  color:black;
+}
+
+.light .app,
+.light .modal-content{
+  background:#f8fafc;
+  color:black;
+}
+
+.light .display,
+.light .history,
+.light input,
+.light textarea,
+.light .media-card,
+.light .user-status{
+  background:#e2e8f0;
+  color:black;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="title">Calcolatrice Evo</div>
+    <div class="top-buttons">
+      <button class="small-btn" id="settingsBtn">⚙️</button>
+      <button class="small-btn" id="secretBtn">🔒</button>
+    </div>
+  </div>
+
+  <div class="display">
+    <div class="operation" id="operation"></div>
+    <div class="result" id="result">0</div>
+  </div>
+
+  <div class="buttons">
+    <button class="calc-btn danger" data-action="clear">AC</button>
+    <button class="calc-btn special" data-action="delete">⌫</button>
+    <button class="calc-btn special" data-value="Math.sqrt(">√</button>
+    <button class="calc-btn operator" data-value="/">÷</button>
+
+    <button class="calc-btn special" data-value="Math.sin(">sin</button>
+    <button class="calc-btn special" data-value="Math.cos(">cos</button>
+    <button class="calc-btn special" data-value="Math.tan(">tan</button>
+    <button class="calc-btn operator" data-value="*">×</button>
+
+    <button class="calc-btn special" data-value="Math.log10(">log</button>
+    <button class="calc-btn special" data-value="Math.log(">ln</button>
+    <button class="calc-btn special" data-value="Math.PI">π</button>
+    <button class="calc-btn special" data-value="Math.E">e</button>
+
+    <button class="calc-btn" data-value="7">7</button>
+    <button class="calc-btn" data-value="8">8</button>
+    <button class="calc-btn" data-value="9">9</button>
+    <button class="calc-btn operator" data-value="-">−</button>
+
+    <button class="calc-btn" data-value="4">4</button>
+    <button class="calc-btn" data-value="5">5</button>
+    <button class="calc-btn" data-value="6">6</button>
+    <button class="calc-btn operator" data-value="+">+</button>
+
+    <button class="calc-btn" data-value="1">1</button>
+    <button class="calc-btn" data-value="2">2</button>
+    <button class="calc-btn" data-value="3">3</button>
+    <button class="calc-btn special" data-value="**">xʸ</button>
+
+    <button class="calc-btn" data-value="0">0</button>
+    <button class="calc-btn" data-value=".">.</button>
+    <button class="calc-btn special" data-value="%">%</button>
+    <button class="calc-btn equal" data-action="equals">=</button>
+
+    <button class="calc-btn special" data-value="(">(</button>
+    <button class="calc-btn special" data-value=")">)</button>
+    <button class="calc-btn special" data-action="ans">ANS</button>
+    <button class="calc-btn danger" data-action="clearHistory">CH</button>
+  </div>
+
+  <div class="history" id="historyBox">
+    <h3>Cronologia</h3>
+    <div id="historyList">Nessun calcolo ancora.</div>
+  </div>
+</div>
+
+<div class="modal" id="loginModal">
+  <div class="modal-content">
+    <h2>🔒 Cartella segreta</h2>
+
+    <div class="user-status" id="googleStatus">Google: non connesso</div>
+
+    <button class="google" id="googleLoginBtn" style="width:100%;padding:13px;border-radius:14px;margin-bottom:10px">
+      Accedi Google
+    </button>
+
+    <button class="close" id="googleLogoutBtn" style="width:100%;padding:13px;border-radius:14px;margin-bottom:10px">
+      Esci Google
+    </button>
+
+    <input id="passwordInput" type="password" placeholder="Inserisci password">
+
+    <div class="modal-actions">
+      <button class="save" id="openSecretBtn">Apri</button>
+      <button class="close" data-close="loginModal">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="secretModal">
+  <div class="modal-content">
+    <h2>📁 Cartella segreta</h2>
+
+    <textarea id="secretNotes" placeholder="Scrivi note private..."></textarea>
+
+    <input type="file" id="secretFiles" multiple accept="image/*,video/*">
+
+    <div class="modal-actions">
+      <button class="save" id="saveSecretBtn">Salva note</button>
+      <button class="delete" id="deleteSecretBtn">Cancella tutto</button>
+      <button class="close" data-close="secretModal">Chiudi</button>
+    </div>
+
+    <h3 style="margin-top:14px">Galleria</h3>
+    <div class="gallery" id="secretGallery"></div>
+  </div>
+</div>
+
+<div class="modal" id="settingsModal">
+  <div class="modal-content">
+    <h2>⚙️ Impostazioni</h2>
+
+    <button class="save" style="width:100%;padding:13px;border-radius:14px;margin-bottom:8px" id="themeBtn">
+      Tema chiaro/scuro
+    </button>
+
+    <input id="newPassword" type="password" placeholder="Nuova password">
+
+    <button class="save" style="width:100%;padding:13px;border-radius:14px" id="changePasswordBtn">
+      Salva password
+    </button>
+
+    <div class="modal-actions">
+      <button class="close" data-close="settingsModal">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let expression="";
+let history=[];
+let ans=0;
+let secretPassword=localStorage.getItem("secretPassword") || "1234";
+let secretMedia=[];
+
+const operationEl=document.getElementById("operation");
+const resultEl=document.getElementById("result");
+const historyListEl=document.getElementById("historyList");
+const secretGallery=document.getElementById("secretGallery");
+const secretNotes=document.getElementById("secretNotes");
+const secretFiles=document.getElementById("secretFiles");
+
+function updateDisplay(){
+  operationEl.textContent = expression
+    .replaceAll("*","×")
+    .replaceAll("/","÷")
+    .replaceAll("Math.sqrt","√")
+    .replaceAll("Math.sin","sin")
+    .replaceAll("Math.cos","cos")
+    .replaceAll("Math.tan","tan")
+    .replaceAll("Math.log10","log")
+    .replaceAll("Math.log","ln")
+    .replaceAll("Math.PI","π")
+    .replaceAll("Math.E","e");
+}
+
+function addToDisplay(value){
+  expression += value;
+  updateDisplay();
+}
+
+function clearAll(){
+  expression="";
+  resultEl.textContent="0";
+  updateDisplay();
+}
+
+function deleteLast(){
+  expression=expression.slice(0,-1);
+  updateDisplay();
+}
+
+function calculate(){
+  try{
+    if(expression.trim()==="") return;
+
+    let safe=expression.replaceAll("%","/100");
+    let result=Function("return " + safe)();
+
+    if(!Number.isFinite(result)){
+      resultEl.textContent="Errore";
+      return;
+    }
+
+    ans=result;
+    resultEl.textContent=result;
+    history.unshift(expression + " = " + result);
+    updateHistory();
+    expression=String(result);
+    updateDisplay();
+
+  }catch(e){
+    resultEl.textContent="Errore";
+  }
+}
+
+function updateHistory(){
+  if(history.length===0){
+    historyListEl.textContent="Nessun calcolo ancora.";
+    return;
+  }
+
+  historyListEl.innerHTML=history
+    .slice(0,8)
+    .map(item=>`<div class="history-item">${item}</div>`)
+    .join("");
+}
+
+function clearHistory(){
+  history=[];
+  updateHistory();
+}
+
+function openModal(id){
+  document.getElementById(id).style.display="flex";
+}
+
+function closeModal(id){
+  document.getElementById(id).style.display="none";
+}
+
+function openSecret(){
+  document.getElementById("passwordInput").value="";
+  openModal("loginModal");
+}
+
+function checkPassword(){
+  const pass=document.getElementById("passwordInput").value;
+
+  if(pass===secretPassword){
+    closeModal("loginModal");
+    secretNotes.value=localStorage.getItem("secretNotes") || "";
+    openModal("secretModal");
+    renderGallery();
+  }else{
+    alert("Password sbagliata");
+  }
+}
+
+function saveSecret(){
+  localStorage.setItem("secretNotes",secretNotes.value);
+  alert("Note salvate");
+}
+
+function deleteAllSecret(){
+  if(!confirm("Cancellare note, foto e video?")) return;
+
+  localStorage.removeItem("secretNotes");
+  secretNotes.value="";
+  secretMedia=[];
+  renderGallery();
+}
+
+function changePassword(){
+  const p=document.getElementById("newPassword").value.trim();
+
+  if(p.length<4){
+    alert("Minimo 4 caratteri");
+    return;
+  }
+
+  secretPassword=p;
+  localStorage.setItem("secretPassword",p);
+  document.getElementById("newPassword").value="";
+  alert("Password cambiata");
+}
+
+function renderGallery(){
+  secretGallery.innerHTML="";
+
+  if(secretMedia.length===0){
+    secretGallery.innerHTML="<p style='color:#94a3b8'>Nessun file caricato.</p>";
+    return;
+  }
+
+  secretMedia.forEach((item,index)=>{
+    const card=document.createElement("div");
+    card.className="media-card";
+
+    if(item.type.startsWith("image")){
+      const img=document.createElement("img");
+      img.src=item.url;
+      card.appendChild(img);
+    }
+
+    if(item.type.startsWith("video")){
+      const video=document.createElement("video");
+      video.src=item.url;
+      video.controls=true;
+      card.appendChild(video);
+    }
+
+    const del=document.createElement("button");
+    del.textContent="Elimina";
+    del.onclick=()=>{
+      secretMedia.splice(index,1);
+      renderGallery();
+    };
+
+    card.appendChild(del);
+    secretGallery.appendChild(card);
+  });
+}
+
+function handleFiles(e){
+  const files=Array.from(e.target.files);
+
+  files.forEach(file=>{
+    secretMedia.push({
+      type:file.type,
+      url:URL.createObjectURL(file)
+    });
+  });
+
+  e.target.value="";
+  renderGallery();
+}
+
+document.querySelectorAll("[data-value]").forEach(btn=>{
+  btn.addEventListener("click",()=>addToDisplay(btn.dataset.value));
+});
+
+document.querySelectorAll("[data-action]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const action=btn.dataset.action;
+
+    if(action==="clear") clearAll();
+    if(action==="delete") deleteLast();
+    if(action==="equals") calculate();
+    if(action==="ans") addToDisplay(String(ans));
+    if(action==="clearHistory") clearHistory();
+  });
+});
+
+document.querySelectorAll("[data-close]").forEach(btn=>{
+  btn.addEventListener("click",()=>closeModal(btn.dataset.close));
+});
+
+document.getElementById("settingsBtn").addEventListener("click",()=>openModal("settingsModal"));
+document.getElementById("secretBtn").addEventListener("click",openSecret);
+document.getElementById("openSecretBtn").addEventListener("click",checkPassword);
+document.getElementById("saveSecretBtn").addEventListener("click",saveSecret);
+document.getElementById("deleteSecretBtn").addEventListener("click",deleteAllSecret);
+document.getElementById("themeBtn").addEventListener("click",()=>document.body.classList.toggle("light"));
+document.getElementById("changePasswordBtn").addEventListener("click",changePassword);
+secretFiles.addEventListener("change",handleFiles);
+
+updateDisplay();
+updateHistory();
+renderGallery();
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyDTGZW20-uwViceCWkD2btr2r1yOQed3iE",
+  authDomain:"calcolatriceevo-75469.firebaseapp.com",
+  projectId:"calcolatriceevo-75469",
+  storageBucket:"calcolatriceevo-75469.firebasestorage.app",
+  messagingSenderId:"1025962481773",
+  appId:"1:1025962481773:web:8501085b938619243c0764",
+  measurementId:"G-DTFC926QF7"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const provider=new GoogleAuthProvider();
+
+window.loginGoogle=async()=>{
+  try{
+    await signInWithRedirect(auth,provider);
+  }catch(e){
+    alert("Errore Google: "+e.message);
+  }
+};
+
+window.loginGoogle=async()=>{
+  try{
+    const result = await signInWithPopup(auth,provider);
+    alert("Benvenuto "+(result.user.displayName||result.user.email));
+  }catch(e){
+    alert("Errore Google: "+e.message);
+  }
+};
+
+
+
+onAuthStateChanged(auth,(user)=>{
+  const box=document.getElementById("googleStatus");
+
+  if(!box)return;
+
+  if(user){
+    box.textContent="Google: "+(user.displayName||user.email);
+  }else{
+    box.textContent="Google: non connesso";
+  }
+});
+
+const googleLoginBtn=document.getElementById("googleLoginBtn");
+if(googleLoginBtn){
+  googleLoginBtn.addEventListener("click",()=>window.loginGoogle());
+}
+
+const googleLogoutBtn=document.getElementById("googleLogoutBtn");
+if(googleLogoutBtn){
+  googleLogoutBtn.addEventListener("click",()=>window.logoutGoogle());
+}
+</script>
+
+</body>
+</html>
