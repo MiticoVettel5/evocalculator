@@ -1,4 +1,4 @@
-const CACHE="evocalc-v1";
+const CACHE="evocalc-v2";
 
 self.addEventListener("install",e=>{
  e.waitUntil(
