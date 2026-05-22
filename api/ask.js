@@ -39,7 +39,7 @@ export default async function handler(req, res) {
           "X-OpenRouter-Title": "Calcolatrice Evo AI"
         },
         body: JSON.stringify({
-          model: "openai/gpt-4o-mini",
+          model:"meta-llama/llama-3.1-8b-instruct:free",
           temperature: 0.35,
           top_p: 0.9,
           max_tokens: 1200,
