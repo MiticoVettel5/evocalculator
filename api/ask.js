@@ -39,7 +39,7 @@ export default async function handler(req, res) {
           "X-OpenRouter-Title": "Calcolatrice Evo AI"
         },
         body: JSON.stringify({
-          model:"google/gemma-3-27b-it:free",
+          model:"google/gemini-2.0-flash-001",
           temperature: 0.35,
           top_p: 0.9,
           max_tokens: 1200,
