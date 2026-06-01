@@ -21,39 +21,49 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!process.env.OPENROUTER_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     return res.status(500).json({
-      error: "Chiave OpenRouter mancante nel backend."
+      error: "Chiave Gemini mancante nel backend."
     });
   }
 
   try {
+    const prompt = `
+Sei Evo AI, un assistente intelligente moderno integrato nella Calcolatrice Evo.
+Rispondi sempre in italiano chiaro, preciso e naturale.
+Per matematica mostra i calcoli passo passo.
+Per programmazione scrivi codice pulito e spiegato.
+Per storia usa date precise e cronologia quando serve.
+Per studio crea schemi, riassunti, mappe concettuali e consigli pratici.
+Non inventare fonti, dati o fatti incerti: se non sei sicuro, dillo chiaramente.
+
+Domanda utente:
+${question.trim()}
+`;
+
     const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" +
+        process.env.GEMINI_API_KEY,
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://evocalculator.vercel.app",
-          "X-OpenRouter-Title": "Calcolatrice Evo AI"
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model:"google/gemini-2.0-flash-001",
-          temperature: 0.35,
-          top_p: 0.9,
-          max_tokens: 1200,
-          messages: [
+          contents: [
             {
-              role: "system",
-              content:
-                "Sei Evo AI, un assistente intelligente moderno integrato nella Calcolatrice Evo. Rispondi sempre in italiano chiaro, preciso e naturale. Adatta la risposta alla domanda. Per domande semplici sii diretto. Per domande complesse usa spiegazioni ordinate, passaggi numerati, esempi e dettagli utili. Per matematica mostra i calcoli passo passo. Per programmazione scrivi codice pulito e spiegato. Per storia usa date precise e cronologia quando serve. Per studio crea schemi, riassunti, mappe concettuali e consigli pratici. Se la domanda richiede fonti, aggiungi una sezione finale chiamata 'Fonti consigliate' con siti o riferimenti autorevoli da consultare. Non inventare fonti, dati o fatti incerti: se non sei sicuro, dillo chiaramente."
-            },
-            {
-              role: "user",
-              content: question.trim()
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
             }
-          ]
+          ],
+          generationConfig: {
+            temperature: 0.35,
+            topP: 0.9,
+            maxOutputTokens: 1200
+          }
         })
       }
     );
@@ -64,18 +74,18 @@ export default async function handler(req, res) {
       return res.status(response.status).json({
         error:
           data?.error?.message ||
-          "Errore nella risposta di OpenRouter."
+          "Errore nella risposta di Gemini."
       });
     }
 
     const answer =
-      data?.choices?.[0]?.message?.content ||
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
       "Nessuna risposta ricevuta dall'AI.";
 
     return res.status(200).json({
       answer,
-      model: data?.model || "openai/gpt-4o-mini",
-      usage: data?.usage || null
+      model: "gemini-2.0-flash",
+      usage: data?.usageMetadata || null
     });
 
   } catch (error) {
