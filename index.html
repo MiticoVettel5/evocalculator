@@ -501,6 +501,770 @@ textarea{
     <h2> Evo AI</h2>
 
     <div class="user-status">
+</div>
+
+<div class="user-status">
+  <b>Risposta AI:</b><br><br>
+
+  <label>
+    <input type="radio" name="aiMode" value="text" checked>
+    Testo
+  </label>
+
+  <label style="margin-left:12px">
+    <input type="radio" name="aiMode" value="voice">
+    Voce
+  </label>
+
+  <br><br>
+
+  <button class="save" id="voiceBtn" style="width:100%;padding:12px;border-radius:14px">
+    🎙️ Parla con Evo AI
+  </button>
+</div>
+
+<div class="user-status">
+  <b>Domande consigliate:</b><br><br>
+    <div class="user-status">
+      <b>Domande consigliate:</b><br><br>
+
+      <button class="save ai-chip" onclick="quickAsk('Cos’è il Terzo Mondo?')">
+        🌍 Cos’è il Terzo Mondo?
+      </button>
+
+      <button class="save ai-chip" onclick="quickAsk('Riassumi la Divina Commedia in strutture precise')">
+        📘 Divina Commedia
+      </button>
+
+      <button class="save ai-chip" onclick="quickAsk('Sono stato preso in giro, cosa dovrei fare?')">
+        🧠 Sono stato preso in giro
+      </button>
+
+      <button class="save ai-chip" onclick="quickAsk('Risolvi 2x+6=14 passo passo')">
+        ➗ Risolvi 2x+6=14
+      </button>
+    </div>
+
+    <div id="chatBox" class="ai-chat">
+      👋 Ciao! Sono Evo AI. Scrivimi una domanda o allega un file.
+    </div>
+
+    <div id="attachMenu" class="attach-menu">
+      <button data-attach="photo">📷 Aggiungi foto</button>
+      <button data-attach="video">🎥 Aggiungi video</button>
+      <button data-attach="pdf">📄 Aggiungi PDF</button>
+    </div>
+
+    <div id="attachedPreview"></div>
+
+    <div class="ai-input-area">
+      <button class="ai-circle" id="attachAiBtn">+</button>
+
+      <input id="aiInput" type="text" placeholder="Scrivi qui...">
+
+      <button class="ai-circle ai-send" id="sendAiBtn">↑</button>
+    </div>
+
+    <input type="file" id="aiFiles" multiple style="display:none;">
+
+    <div class="modal-actions">
+      <button class="close" data-close="aiModal">Chiudi</button>
+    </div>
+  </div>
+</div>
+      <div class="modal" id="converterModal">
+  <div class="modal-content">
+    <h2>📐 Conversioni</h2>
+
+    <select id="convType">
+      <option value="km-mi">Km → Miglia</option>
+      <option value="mi-km">Miglia → Km</option>
+      <option value="c-f">Celsius → Fahrenheit</option>
+      <option value="f-c">Fahrenheit → Celsius</option>
+      <option value="kg-lb">Kg → Libbre</option>
+      <option value="lb-kg">Libbre → Kg</option>
+      <option value="m-ft">Metri → Piedi</option>
+      <option value="ft-m">Piedi → Metri</option>
+      <option value="m2-ft2">m² → ft²</option>
+      <option value="l-gal">Litri → Galloni</option>
+      <option value="j-cal">Joule → Calorie</option>
+      <option value="w-hp">Watt → Cavalli</option>
+    </select>
+
+    <input id="convInput" type="number" placeholder="Inserisci valore">
+
+    <button class="save" id="convertBtn" style="width:100%;padding:13px;border-radius:14px">
+      Converti
+    </button>
+
+    <div class="user-status" id="convResult">
+      Risultato...
+    </div>
+
+    <div class="modal-actions">
+      <button class="close" data-close="converterModal">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let expression="";
+let history=[];
+let ans=0;
+let secretPassword=localStorage.getItem("secretPassword") || "1234";
+let secretMedia=[];
+
+const operationEl=document.getElementById("operation");
+const resultEl=document.getElementById("result");
+const historyListEl=document.getElementById("historyList");
+const secretGallery=document.getElementById("secretGallery");
+const secretNotes=document.getElementById("secretNotes");
+const secretFiles=document.getElementById("secretFiles");
+
+function updateDisplay(){
+  operationEl.textContent = expression
+    .replaceAll("*","×")
+    .replaceAll("/","÷")
+    .replaceAll("Math.sqrt","√")
+    .replaceAll("Math.sin","sin")
+    .replaceAll("Math.cos","cos")
+    .replaceAll("Math.tan","tan")
+    .replaceAll("Math.log10","log")
+    .replaceAll("Math.log","ln")
+    .replaceAll("Math.PI","π")
+    .replaceAll("Math.E","e");
+}
+
+function addToDisplay(value){
+  expression += value;
+  updateDisplay();
+}
+
+function clearAll(){
+  expression="";
+  resultEl.textContent="0";
+  updateDisplay();
+}
+
+function deleteLast(){
+  expression=expression.slice(0,-1);
+  updateDisplay();
+}
+
+function calculate(){
+  try{
+    if(expression.trim()==="") return;
+
+    let safe=expression.replaceAll("%","/100");
+    let result=Function("return " + safe)();
+
+    if(!Number.isFinite(result)){
+      resultEl.textContent="Errore";
+      return;
+    }
+
+    ans=result;
+    resultEl.textContent=result;
+    history.unshift(expression + " = " + result);
+    updateHistory();
+    expression=String(result);
+    updateDisplay();
+
+  }catch(e){
+    resultEl.textContent="Errore";
+  }
+}
+
+function updateHistory(){
+  if(history.length===0){
+    historyListEl.textContent="Nessun calcolo ancora.";
+    return;
+  }
+
+  historyListEl.innerHTML=history
+    .slice(0,8)
+    .map(item=>`<div class="history-item">${item}</div>`)
+    .join("");
+}
+
+function clearHistory(){
+  history=[];
+  updateHistory();
+}
+
+function openModal(id){
+  document.getElementById(id).style.display="flex";
+}
+
+function closeModal(id){
+  document.getElementById(id).style.display="none";
+}
+
+function openSecret(){
+  document.getElementById("passwordInput").value="";
+  openModal("loginModal");
+}
+
+function checkPassword(){
+  const pass=document.getElementById("passwordInput").value;
+
+  if(pass===secretPassword){
+    closeModal("loginModal");
+    secretNotes.value=localStorage.getItem("secretNotes") || "";
+    openModal("secretModal");
+    renderGallery();
+  }else{
+    alert("Password sbagliata");
+  }
+}
+
+function saveSecret(){
+  localStorage.setItem("secretNotes",secretNotes.value);
+  alert("Note salvate");
+}
+
+function deleteAllSecret(){
+  if(!confirm("Cancellare note, foto e video?")) return;
+
+  localStorage.removeItem("secretNotes");
+  secretNotes.value="";
+  secretMedia=[];
+  renderGallery();
+}
+
+function changePassword(){
+  const p=document.getElementById("newPassword").value.trim();
+
+  if(p.length<4){
+    alert("Minimo 4 caratteri");
+    return;
+  }
+
+  secretPassword=p;
+  localStorage.setItem("secretPassword",p);
+  document.getElementById("newPassword").value="";
+  alert("Password cambiata");
+}
+
+function renderGallery(){
+  secretGallery.innerHTML="";
+
+  if(secretMedia.length===0){
+    secretGallery.innerHTML="<p style='color:#94a3b8'>Nessun file caricato.</p>";
+    return;
+  }
+
+  secretMedia.forEach((item,index)=>{
+    const card=document.createElement("div");
+    card.className="media-card";
+
+    if(item.type.startsWith("image")){
+      const img=document.createElement("img");
+      img.src=item.url;
+      card.appendChild(img);
+    }
+
+    if(item.type.startsWith("video")){
+      const video=document.createElement("video");
+      video.src=item.url;
+      video.controls=true;
+      card.appendChild(video);
+    }
+
+    const del=document.createElement("button");
+    del.textContent="Elimina";
+    del.onclick=()=>{
+      secretMedia.splice(index,1);
+      renderGallery();
+    };
+
+    card.appendChild(del);
+    secretGallery.appendChild(card);
+  });
+}
+
+function handleFiles(e){
+  const files=Array.from(e.target.files);
+
+  files.forEach(file=>{
+    secretMedia.push({
+      type:file.type,
+      url:URL.createObjectURL(file)
+    });
+  });
+
+  e.target.value="";
+  renderGallery();
+}
+
+document.querySelectorAll("[data-value]").forEach(btn=>{
+  btn.addEventListener("click",()=>addToDisplay(btn.dataset.value));
+});
+
+document.querySelectorAll("[data-action]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const action=btn.dataset.action;
+
+    if(action==="clear") clearAll();
+    if(action==="delete") deleteLast();
+    if(action==="equals") calculate();
+    if(action==="ans") addToDisplay(String(ans));
+    if(action==="clearHistory") clearHistory();
+  });
+});
+
+document.querySelectorAll("[data-close]").forEach(btn=>{
+  btn.addEventListener("click",()=>closeModal(btn.dataset.close));
+});
+
+document.getElementById("settingsBtn").addEventListener("click",()=>openModal("settingsModal"));
+document.getElementById("secretBtn").addEventListener("click",openSecret);
+document.getElementById("converterBtn")
+.addEventListener("click",()=>openModal("converterModal"));
+document.getElementById("openSecretBtn").addEventListener("click",checkPassword);
+document.getElementById("saveSecretBtn").addEventListener("click",saveSecret);
+document.getElementById("deleteSecretBtn").addEventListener("click",deleteAllSecret);
+document.getElementById("themeBtn").addEventListener("click",()=>document.body.classList.toggle("light"));
+document.getElementById("changePasswordBtn").addEventListener("click",changePassword);
+secretFiles.addEventListener("change",handleFiles);
+document.getElementById("convertBtn").addEventListener("click",()=>{
+  const type=document.getElementById("convType").value;
+  const v=parseFloat(document.getElementById("convInput").value);
+
+  let r="";
+
+  if(isNaN(v)){
+      r="Inserisci un numero valido";
+  }else{
+
+      if(type==="km-mi")
+      r=v+" km = "+(v*0.621371).toFixed(4)+" miglia";
+
+      if(type==="mi-km")
+      r=v+" miglia = "+(v*1.60934).toFixed(4)+" km";
+
+      if(type==="c-f")
+      r=v+" °C = "+((v*9/5)+32).toFixed(2)+" °F";
+
+      if(type==="f-c")
+      r=v+" °F = "+((v-32)*5/9).toFixed(2)+" °C";
+
+      if(type==="kg-lb")
+      r=v+" kg = "+(v*2.20462).toFixed(4)+" lb";
+
+      if(type==="lb-kg")
+      r=v+" lb = "+(v*0.453592).toFixed(4)+" kg";
+
+      if(type==="m-ft")
+      r=v+" m = "+(v*3.28084).toFixed(4)+" piedi";
+
+      if(type==="ft-m")
+      r=v+" piedi = "+(v*0.3048).toFixed(4)+" m";
+  }
+
+  document.getElementById("convResult").textContent=r;
+});
+let attachedFiles=[];
+
+document.getE  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-auto-rows:1fr;
+  gap:6px;
+  min-height:0;
+}
+
+button{
+  border:none;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  user-select:none;
+}
+
+.calc-btn{
+  width:100%;
+  height:100%;
+  border-radius:14px;
+  background:#1e293b;
+  font-size:20px;
+  box-shadow:0 4px 0 rgba(0,0,0,.25);
+}
+
+.calc-btn:active{
+  transform:translateY(2px);
+  box-shadow:0 2px 0 rgba(0,0,0,.25);
+  filter:brightness(1.2);
+}
+
+.operator{background:#2563eb}
+.special{background:#475569}
+.danger{background:#dc2626}
+.equal{background:#16a34a}
+
+.history{
+  margin-top:8px;
+  background:#0f172a;
+  border-radius:16px;
+  padding:8px;
+  height:120px;
+  max-height:120px;
+  min-height:120px;
+  overflow-y:auto;
+  color:#cbd5e1;
+  font-size:12px;
+  flex-shrink:0;
+}
+
+.history h3{
+  color:#93c5fd;
+  margin-bottom:4px;
+  font-size:12px;
+}
+
+.history-item{
+  border-bottom:1px solid #1e293b;
+  padding-bottom:3px;
+  margin-bottom:3px;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.78);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  padding:18px;
+  z-index:99;
+}
+
+.modal-content{
+  width:100%;
+  max-width:430px;
+  background:#020617;
+  border-radius:24px;
+  padding:20px;
+  border:1px solid rgba(255,255,255,.12);
+  max-height:90vh;
+  overflow-y:auto;
+}
+
+.modal h2{
+  margin-bottom:14px;
+}
+
+input,textarea{
+  width:100%;
+  background:#0f172a;
+  color:white;
+  border:1px solid #334155;
+  border-radius:14px;
+  padding:12px;
+  margin:8px 0;
+  font-size:16px;
+}
+
+textarea{
+  min-height:120px;
+}
+
+.modal-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.modal-actions button{
+  flex:1;
+  padding:13px;
+  border-radius:14px;
+  font-size:15px;
+}
+
+.save{background:#16a34a}
+.close{background:#475569}
+.delete{background:#dc2626}
+.google{background:#2563eb}
+
+.user-status{
+  background:#0f172a;
+  color:#cbd5e1;
+  border-radius:14px;
+  padding:10px;
+  margin-bottom:10px;
+  font-size:14px;
+}
+
+.gallery{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.media-card{
+  background:#0f172a;
+  padding:8px;
+  border-radius:14px;
+}
+
+.media-card img,
+.media-card video{
+  width:100%;
+  height:130px;
+  object-fit:cover;
+  border-radius:12px;
+}
+
+.media-card button{
+  width:100%;
+  margin-top:6px;
+  padding:8px;
+  border-radius:10px;
+  background:#dc2626;
+}
+
+.light{
+  background:#e5e7eb;
+  color:black;
+}
+
+.light .app,
+.light .modal-content{
+  background:#f8fafc;
+  color:black;
+}
+
+.light .display,
+.light .history,
+.light input,
+.light textarea,
+.light .media-card,
+.light .user-status{
+  background:#e2e8f0;
+  color:black;
+}
+
+.ai-chat{
+  height:300px;
+  overflow-y:auto;
+  background:#0f172a;
+  border-radius:18px;
+  padding:12px;
+  margin-bottom:10px;
+}
+
+.ai-input-area{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#0f172a;
+  border-radius:20px;
+  padding:8px;
+}
+
+.ai-circle{
+  width:48px;
+  height:48px;
+  min-width:48px;
+  border-radius:50%;
+  background:#2563eb;
+  color:white;
+  font-size:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid rgba(255,255,255,.18);
+}
+
+.ai-send{
+  background:#16a34a;
+  font-size:25px;
+}
+
+#aiInput{
+  flex:1;
+  margin:0;
+  border:none;
+  background:transparent;
+  color:white;
+  outline:none;
+}
+
+.attach-menu{
+  display:none;
+  background:#111827;
+  border:1px solid #334155;
+  border-radius:16px;
+  padding:10px;
+  margin-bottom:8px;
+}
+
+.attach-menu.show{
+  display:block;
+}
+
+.attach-menu button{
+  width:100%;
+  padding:10px;
+  margin:4px 0;
+  border-radius:12px;
+  background:#1e293b;
+  color:white;
+}
+
+#attachedPreview{
+  color:#93c5fd;
+  font-size:13px;
+  margin-bottom:8px;
+}
+
+.msg-user{
+  color:#93c5fd;
+  margin:8px 0;
+}
+
+.msg-ai{
+  color:#e5e7eb;
+  margin:8px 0;
+  white-space:pre-wrap;
+}
+</style>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#020617">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="title">Calcolatrice Evo</div>
+    <div class="top-buttons">
+      <button class="small-btn" id="settingsBtn">⚙️</button>
+      <button class="small-btn" id="secretBtn">🔒</button>
+      <button class="small-btn" id="converterBtn">📐</button>
+      <button class="small-btn" id="aiBtn">AI</button>
+    </div>
+  </div>
+
+  <div class="display">
+    <div class="operation" id="operation"></div>
+    <div class="result" id="result">0</div>
+  </div>
+
+  <div class="buttons">
+    <button class="calc-btn danger" data-action="clear">AC</button>
+    <button class="calc-btn special" data-action="delete">⌫</button>
+    <button class="calc-btn special" data-value="Math.sqrt(">√</button>
+    <button class="calc-btn operator" data-value="/">÷</button>
+
+    <button class="calc-btn special" data-value="Math.sin(">sin</button>
+    <button class="calc-btn special" data-value="Math.cos(">cos</button>
+    <button class="calc-btn special" data-value="Math.tan(">tan</button>
+    <button class="calc-btn operator" data-value="*">×</button>
+
+    <button class="calc-btn special" data-value="Math.log10(">log</button>
+    <button class="calc-btn special" data-value="Math.log(">ln</button>
+    <button class="calc-btn special" data-value="Math.PI">π</button>
+    <button class="calc-btn special" data-value="Math.E">e</button>
+
+    <button class="calc-btn" data-value="7">7</button>
+    <button class="calc-btn" data-value="8">8</button>
+    <button class="calc-btn" data-value="9">9</button>
+    <button class="calc-btn operator" data-value="-">−</button>
+
+    <button class="calc-btn" data-value="4">4</button>
+    <button class="calc-btn" data-value="5">5</button>
+    <button class="calc-btn" data-value="6">6</button>
+    <button class="calc-btn operator" data-value="+">+</button>
+
+    <button class="calc-btn" data-value="1">1</button>
+    <button class="calc-btn" data-value="2">2</button>
+    <button class="calc-btn" data-value="3">3</button>
+    <button class="calc-btn special" data-value="**">xʸ</button>
+
+    <button class="calc-btn" data-value="0">0</button>
+    <button class="calc-btn" data-value=",">.</button>
+    <button class="calc-btn special" data-value="%">%</button>
+    <button class="calc-btn equal" data-action="equals">=</button>
+
+    <button class="calc-btn special" data-value="(">(</button>
+    <button class="calc-btn special" data-value=")">)</button>
+    <button class="calc-btn special" data-action="ans">ANS</button>
+    <button class="calc-btn danger" data-action="clearHistory">CH</button>
+  </div>
+
+  <div class="history" id="historyBox">
+    <h3>Cronologia</h3>
+    <div id="historyList">Nessun calcolo ancora.</div>
+  </div>
+</div>
+
+<div class="modal" id="loginModal">
+  <div class="modal-content">
+    <h2>🔒 Cartella segreta</h2>
+
+    <div class="user-status" id="googleStatus">Google: non connesso</div>
+
+    <button class="google" id="googleLoginBtn" style="width:100%;padding:13px;border-radius:14px;margin-bottom:10px">
+      Accedi Google
+    </button>
+
+    <button class="close" id="googleLogoutBtn" style="width:100%;padding:13px;border-radius:14px;margin-bottom:10px">
+      Esci Google
+    </button>
+
+    <input id="passwordInput" type="password" placeholder="Inserisci password">
+
+    <div class="modal-actions">
+      <button class="save" id="openSecretBtn">Apri</button>
+      <button class="close" data-close="loginModal">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="secretModal">
+  <div class="modal-content">
+    <h2>📁 Cartella segreta</h2>
+
+    <textarea id="secretNotes" placeholder="Scrivi note private..."></textarea>
+
+    <input type="file" id="secretFiles" multiple accept="image/*,video/*">
+
+    <div class="modal-actions">
+      <button class="save" id="saveSecretBtn">Salva note</button>
+      <button class="delete" id="deleteSecretBtn">Cancella tutto</button>
+      <button class="close" data-close="secretModal">Chiudi</button>
+    </div>
+
+    <h3 style="margin-top:14px">Galleria</h3>
+    <div class="gallery" id="secretGallery"></div>
+  </div>
+</div>
+
+<div class="modal" id="settingsModal">
+  <div class="modal-content">
+    <h2>⚙️ Impostazioni</h2>
+
+    <button class="save" style="width:100%;padding:13px;border-radius:14px;margin-bottom:8px" id="themeBtn">
+      Tema chiaro/scuro
+    </button>
+
+    <input id="newPassword" type="password" placeholder="Nuova password">
+
+    <button class="save" style="width:100%;padding:13px;border-radius:14px" id="changePasswordBtn">
+      Salva password
+    </button>
+
+    <div class="modal-actions">
+      <button class="close" data-close="settingsModal">Chiudi</button>
+      </div>
+
+</div>
+</div>
+<div class="modal" id="aiModal">
+  <div class="modal-content">
+    <h2> Evo AI</h2>
+
+    <div class="user-status">
       <b>Modalità:</b> Studio • Matematica • Informatica • Storia • Lingue
 </div>
 
